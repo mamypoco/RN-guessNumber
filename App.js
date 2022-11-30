@@ -1,20 +1,86 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { useState } from "react";
+import { StyleSheet, ImageBackground, SafeAreaView } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useFonts } from "expo-font";
+import AppLoading from "expo-app-loading";
+
+import StartGameScreen from "./screens/StartGameScreen";
+import GameScreen from "./screens/GameScreen";
+import GameOverScreen from "./screens/GameOverScreen";
+import Colors from "./utils/colors";
 
 export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
+   const [userNumber, setUserNumber] = useState();
+   const [gameIsOver, setGameIsOver] = useState(true);
+   const [guessRounds, setGuessRounds] = useState(0);
+
+   const [fontsLoaded] = useFonts({
+      "open-sans": require("./assets/fonts/OpenSans-Regular.ttf"),
+      "open-sans-bold": require("./assets/fonts/OpenSans-Bold.ttf"),
+   });
+
+   if (!fontsLoaded) {
+      return <AppLoading />;
+   }
+
+   function pickedNumberHandler(pickedNumber) {
+      setUserNumber(pickedNumber);
+      setGameIsOver(false);
+   }
+
+   function gameOverHandler(numberOfRounds) {
+      setGameIsOver(true);
+      setGuessRounds(numberOfRounds);
+   }
+
+   function startNewGameHandler() {
+      setUserNumber(null);
+      setGuessRounds(0);
+   }
+
+   let screen = <StartGameScreen onPickNumber={pickedNumberHandler} />;
+   //＊1　どのスクリーンに行くかは、StartGameScreenの、onPickNumberが適切な数になった時に決まる
+   if (userNumber) {
+      screen = (
+         <GameScreen userNumber={userNumber} onGameOver={gameOverHandler} />
+      );
+   }
+
+   if (gameIsOver && userNumber) {
+      screen = (
+         <GameOverScreen
+            userNumber={userNumber}
+            roundsNumber={guessRounds}
+            onStartNewGame={startNewGameHandler}
+         />
+      );
+   }
+
+   return (
+      <LinearGradient
+         colors={[Colors.primary300, Colors.primary400]}
+         style={styles.rootScreen}
+      >
+         <ImageBackground
+            source={require("./assets/images/background.png")}
+            resizeMode="cover"
+            style={styles.rootScreen}
+            imageStyle={styles.backgroundImage}
+         >
+            <SafeAreaView style={styles.rootScreen}>
+               {screen}
+               {/* ↑　次のスクリーンが表示される */}
+            </SafeAreaView>
+         </ImageBackground>
+      </LinearGradient>
+   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+   rootScreen: {
+      flex: 1,
+   },
+   backgroundImage: {
+      opacity: 0.15,
+   },
 });
